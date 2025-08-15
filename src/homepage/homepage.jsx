@@ -4,12 +4,12 @@ import { Image } from "primereact/image";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import "primeicons/primeicons.css";
 import { caro, itemsList, volcapList } from "../MenuItem";
-import { Layout, Card , Tag, Dropdown } from "antd";
+import { Layout, Card, Tag, Dropdown } from "antd";
 
 import { Carousel } from "primereact/carousel";
 
 import { LeftOutlined, RightOutlined, ReadOutlined } from "@ant-design/icons";
-import { ItemCard , CmtCard  } from "../components/Card";
+import { ItemCard, CmtCard } from "../components/Card";
 
 export default function Homepage() {
   const datedropdown = [
@@ -30,7 +30,9 @@ export default function Homepage() {
     },
   ];
   const [date, setdate] = useState("Ngày");
+  // eslint-disable-next-line
   const [userName, setUserName] = useState("Vuong");
+  // eslint-disable-next-line
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState("Han tu");
   useEffect(() => {
@@ -39,13 +41,14 @@ export default function Homepage() {
     }, 3000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line
   }, [caro.length]);
 
   return (
     <div>
       <div className="m-4 flex flex-column align-items-center">
         <h2>xin chào, {userName}</h2>
-        <div  className="flex align-items-center flex-column w-full">
+        <div className="flex align-items-center flex-column w-full">
           <div className="d-flex align-items-center border-blue-400	border border-round-3xl px-3 py-2 shadow-sm m-auto  w-7 bg-white h-full">
             <i className="pi pi-search"></i>
             <input
@@ -71,17 +74,10 @@ export default function Homepage() {
         </div>
       </div>
       <Layout style={{ backgroundColor: "#f0f2f5" }}>
-        <div style={{ display: "flex", gap: 16 }}>
+        <div className="responsive-layout">
           {/* Cột trái */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <Card className="border-round-2xl"  title="Từ khóa hot" size="small">
+          <div className="column left-col">
+            <Card className="border-round-2xl" title="Từ khóa hot" size="small">
               {currentItem}
             </Card>
 
@@ -99,17 +95,22 @@ export default function Homepage() {
               </div>
             </Card>
 
-            <Card className="border-round-2xl" title="Từ vựng theo chủ đề" size="small" style={{ flex: 1 }}>
+            <Card
+              className="border-round-2xl"
+              title="Từ vựng theo chủ đề"
+              size="small"
+              style={{ flex: 1 }}
+            >
               <div>
-                <ItemCard className="border-round-2xl" icon={"feelings.png"} cont={"..."} state="1" />
+                <ItemCard icon={"feelings.png"} cont={"..."} state="1" />
                 <div className="grid">
                   <div className="col">
-                    <ItemCard className="border-round-2xl" icon={"feelings.png"} cont={"..."} state="2" />
-                    <ItemCard className="border-round-2xl" icon={"feelings.png"} cont={"..."} state="2" />
+                    <ItemCard icon={"feelings.png"} cont={"..."} state="2" />
+                    <ItemCard icon={"feelings.png"} cont={"..."} state="2" />
                   </div>
                   <div className="col">
-                    <ItemCard className="border-round-2xl" icon={"feelings.png"} cont={"..."} state="2" />
-                    <ItemCard className="border-round-2xl" icon={"feelings.png"} cont={"..."} state="2" />
+                    <ItemCard icon={"feelings.png"} cont={"..."} state="2" />
+                    <ItemCard icon={"feelings.png"} cont={"..."} state="2" />
                   </div>
                 </div>
               </div>
@@ -126,16 +127,10 @@ export default function Homepage() {
           </div>
 
           {/* Cột giữa */}
-          <div
-            style={{
-              flex: 2,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
+          <div className="column middle-col">
             <Card className="border-round-2xl" bodyStyle={{ padding: 0 }}>
-              <Card className="border-round-2xl"
+              <Card
+                className="border-round-2xl"
                 bodyStyle={{
                   padding: 0,
                   borderRadius: "12px",
@@ -152,6 +147,7 @@ export default function Homepage() {
                   className="w-full"
                   showIndicators={false}
                   showNavigators={false}
+                  // eslint-disable-next-line
                   itemTemplate={(item) => (
                     <div
                       style={{
@@ -174,17 +170,17 @@ export default function Homepage() {
                   )}
                 />
               </Card>
-            </Card >
+            </Card>
 
-            <Card className="border-round-2xl" title="💡 Mẹo (1/607)" size="small" style={{ flex: 1 }}>
+            <Card
+              className="border-round-2xl"
+              title="💡 Mẹo (1/607)"
+              size="small"
+              style={{ flex: 1 }}
+            >
               <p>
                 Complete offline usage of icons, without dependency on a
-                CDN-hosted font icon file (No more empty square during
-                downloading and no need to deploy icon font files locally
-                either!) Much more display accuracy on lower-resolution screens
-                The ability to choose icon color No need to change built-in
-                icons with overriding styles by providing more props in
-                component
+                CDN-hosted font icon file...
               </p>
               <div style={{ textAlign: "right" }}>
                 <Button type="primary" size="small" text>
@@ -206,15 +202,9 @@ export default function Homepage() {
           </div>
 
           {/* Cột phải */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <Card className="border-round-2xl"
+          <div className="column right-col">
+            <Card
+              className="border-round-2xl"
               title="Bảng xếp hạng"
               size="small"
               extra={
@@ -231,16 +221,21 @@ export default function Homepage() {
               style={{ flex: 1 }}
               bodyStyle={{ maxHeight: 400, overflowY: "auto" }}
             >
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
-              <CmtCard className="border-round-2xl" cont="hay" userName="Vuong" />
+              <CmtCard
+                className="border-round-2xl"
+                cont="hay"
+                userName="Vuong"
+              />
+              <CmtCard
+                className="border-round-2xl"
+                cont="hay"
+                userName="Vuong"
+              />
+              <CmtCard
+                className="border-round-2xl"
+                cont="hay"
+                userName="Vuong"
+              />
             </Card>
 
             <Card className="border-round-2xl" size="small">
@@ -258,6 +253,47 @@ export default function Homepage() {
             </Card>
           </div>
         </div>
+        {/* CSS */}
+        <style >{`
+          .responsive-layout {
+            display: flex;
+            gap: 16px;
+          }
+          .column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          } /* Desktop order & size */
+          .left-col {
+            order: 1;
+            flex: 1;
+          }
+          .middle-col {
+            order: 2;
+            flex: 2;
+          }
+          .right-col {
+            order: 3;
+            flex: 1;
+          } /* Mobile */
+          @media (max-width: 768px) {
+            .responsive-layout {
+              flex-direction: column;
+            }
+            .middle-col {
+              order: 1;
+              flex: 1;
+            }
+            .left-col {
+              order: 2;
+              flex: 1;
+            }
+            .right-col {
+              order: 3;
+              flex: 1;
+            }
+          }
+        `}</style>{" "}
       </Layout>
     </div>
   );

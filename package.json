@@ -12,6 +12,7 @@
     "antd": "^5.26.7",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
+    "chart.js": "^4.5.0",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.6",
