@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Layout, Button, Row, Col } from "antd";
 import { Image } from "primereact/image";
+import { Charttemplate } from "./chart";
+
 const { Sider, Content } = Layout;
 const categories = [
   { title: "HSK 1", words: 504, type: "free" },
@@ -33,6 +35,7 @@ export default function Note() {
   const freeCategories = categories.filter((c) => c.type === "free");
   const premiumCategories = categories.filter((c) => c.type === "premium");
 
+
   return (
     <div>
       <Layout className="my-3 gap-2" style={{ backgroundColor: "transparent" }}>
@@ -49,7 +52,9 @@ export default function Note() {
               justifyContent: "space-between",
             }}
           >
-            <Button className="border-round-xl px-3 py-2 h-auto">Tạo sổ tay</Button>
+            <Button className="border-round-xl px-3 py-2 h-auto">
+              Tạo sổ tay
+            </Button>
             <Button className="border-round-xl px-3 py-2 h-auto">
               <i className="pi pi-sort-down"></i>
             </Button>
@@ -99,7 +104,7 @@ export default function Note() {
                   <Col xs={12} sm={8} md={6} lg={4} key={cat.title}>
                     <Card
                       hoverable
-                      style={{ height: "100%" }} // cho Card chiếm toàn bộ chiều cao Col
+                      style={{ height: "100%" }}
                       bodyStyle={{
                         display: "flex",
                         flexDirection: "column",
@@ -124,17 +129,22 @@ export default function Note() {
           }}
         >
           <div className="flex flex-column gap-3 h-full">
-              <div className="flex align-items-center border border-round-xl px-3 py-2  bg-white h-auto">
-                <i className="pi pi-search"></i>
-                <input
-                  type="text"
-                  className="form-control border-0 shadow-none bg-transparent"
-                  placeholder="Tìm kiếm "
-                />
-              </div>
+            <div className="flex align-items-center border border-round-xl px-3 py-2  bg-white h-auto">
+              <i className="pi pi-search"></i>
+              <input
+                type="text"
+                className="form-control border-0 shadow-none bg-transparent"
+                placeholder="Tìm kiếm "
+              />
             </div>
-          <Card className="border-round-2xl h-auto">
+            <Card className="border-round-2xl h-auto">
+            <div className="card flex justify-content-center">
+
+              <Charttemplate  />
+            </div>
           </Card>
+          </div>
+          
         </Sider>
       </Layout>
     </div>

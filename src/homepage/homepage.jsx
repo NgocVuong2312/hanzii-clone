@@ -61,14 +61,24 @@ export default function Homepage() {
           </div>
           <div className="flex justify-content-center align-items-center mt-3">
             {itemsList.map((m) => (
-              <Button
-                key={""}
-                label={m.label}
-                onClick={() => {
-                  setCurrentItem(m.cont);
-                }}
-                text
-              />
+              //   <Button
+              //     key={""}
+              //     label={m.label}
+
+              //     text
+              //   />
+              <a
+                key={m.label}
+                style={
+                  currentItem === m.cont
+                    ? { backgroundColor: "#47609f", color: "white" }
+                    : {}
+                }
+                className="flex align-items-center gap-2 py-2 px-3 border-round-3xl no-underline cursor-pointer"
+                onClick={() => setCurrentItem(m.cont)}
+              >
+                {m.label}
+              </a>
             ))}
           </div>
         </div>
@@ -254,7 +264,7 @@ export default function Homepage() {
           </div>
         </div>
         {/* CSS */}
-        <style >{`
+        <style jsx>{`
           .responsive-layout {
             display: flex;
             gap: 16px;
