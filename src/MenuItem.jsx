@@ -20,11 +20,6 @@ export const menuItems = [
     label: "So tay",
     icon:"pi pi-book",
     src: "/handbook",
-  },
-  {
-    label: "Cong dong",
-    icon:"pi pi-comment",
-    src: "/community",
   }
 ];
 
