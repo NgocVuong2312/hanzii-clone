@@ -1,17 +1,69 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import { Button } from "primereact/button";
 import { Image } from "primereact/image";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import "primeicons/primeicons.css";
 import { caro, itemsList, volcapList } from "../MenuItem";
-import { Layout, Card, Tag, Dropdown } from "antd";
-
+import { Layout, Card, Tag, Dropdown, Input } from "antd";
 import { Carousel } from "primereact/carousel";
 
 import { LeftOutlined, RightOutlined, ReadOutlined } from "@ant-design/icons";
 import { ItemCard, CmtCard } from "../components/Card";
 
 export default function Homepage() {
+  const URL = "http://localhost:3002/tips";
+  const CMT_URL = "http://localhost:3002/comments";
+  const fetchComments = async () => {
+    const response = await axios.get(CMT_URL);
+    setComments(response.data);
+  };
+  const [commentLike, setCommentLike] = useState();
+  const [commentDislike, setCommentDislike] = useState();
+  useEffect(() => {
+    fetchComments();
+  }, []);
+  const [comments, setComments] = useState([]);
+  const handleAddComment = async () => {
+    if (comment.trim() === "") return;
+    try {
+      await axios.post(CMT_URL, {
+        id: comments.length + 1,
+        content: comment,
+        userName: userName || "Khách",
+        like: commentLike || 0,
+        dislike: commentDislike || 0,
+        likedUsers: [],
+  dislikedUsers: [],
+      });
+      setComment(""); // clear input
+      fetchComments(); // reload lại list
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleAddTip = async () => {
+    if (tipsContent.trim() === "") return;
+    try {
+      const response = await axios.post(URL, {
+        id: tips.length + 1,
+        content: tipsContent,
+      });
+    } catch (error) {
+      console.error("Error adding tip:", error);
+    }
+  };
+  const [tips, setTips] = useState([]);
+  const fetch = async () => {
+    const response = await axios.get(URL);
+    setTips(response.data);
+  };
+  const [tipsContent, setTipsContent] = useState("");
+  useEffect(() => {
+    fetch();
+  }, []);
   const datedropdown = [
     {
       key: "1",
@@ -29,25 +81,33 @@ export default function Homepage() {
       onClick: () => setdate("Tháng này"),
     },
   ];
+  const [comment, setComment] = useState("");
+  const [tipsVisible, setTipsVisible] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const [date, setdate] = useState("Ngày");
-  // eslint-disable-next-line
-  const [userName, setUserName] = useState("Vuong");
-  // eslint-disable-next-line
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
   const [currentItem, setCurrentItem] = useState("Han tu");
+  const User = JSON.parse(localStorage.getItem("user"));
+  console.log(tips);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % caro.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line
-  }, [caro.length]);
+    if (User) {
+      setIsLogin(true);
+      setUserName(User.username);
+      if (User.role == "admin") {
+        setIsAdmin(true);
+      }
+    } else {
+      setIsLogin(false);
+      setUserName("");
+      setIsAdmin(false);
+    }
+  }, [User]);
 
   return (
     <div>
       <div className="m-4 flex flex-column align-items-center">
-        <h2>xin chào, {userName}</h2>
+        {isLogin && <h2>Xin chào, {userName}</h2>}
         <div className="flex align-items-center flex-column w-full">
           <div className="d-flex align-items-center border-blue-400	border border-round-3xl px-3 py-2 shadow-sm m-auto  w-7 bg-white h-full">
             <i className="pi pi-search"></i>
@@ -61,12 +121,6 @@ export default function Homepage() {
           </div>
           <div className="flex justify-content-center align-items-center mt-3">
             {itemsList.map((m) => (
-              //   <Button
-              //     key={""}
-              //     label={m.label}
-
-              //     text
-              //   />
               <a
                 key={m.label}
                 style={
@@ -157,7 +211,6 @@ export default function Homepage() {
                   className="w-full"
                   showIndicators={false}
                   showNavigators={false}
-                  // eslint-disable-next-line
                   itemTemplate={(item) => (
                     <div
                       style={{
@@ -184,19 +237,14 @@ export default function Homepage() {
 
             <Card
               className="border-round-2xl"
-              title="💡 Mẹo (1/607)"
+              title={"💡 Mẹo" + (tips.length > 0 ? ` (${tips.length})` : "")}
               size="small"
               style={{ flex: 1 }}
+              onClick={() => {
+                setTipsVisible(!tipsVisible);
+              }}
             >
-              <p>
-                Complete offline usage of icons, without dependency on a
-                CDN-hosted font icon file...
-              </p>
-              <div style={{ textAlign: "right" }}>
-                <Button type="primary" size="small" text>
-                  Sơ cấp
-                </Button>
-              </div>
+              {tips[0]?.content}
             </Card>
 
             <Card className="border-round-2xl" size="small">
@@ -228,24 +276,44 @@ export default function Homepage() {
                   </Button>
                 </Dropdown>
               }
-              style={{ flex: 1 }}
-              bodyStyle={{ maxHeight: 400, overflowY: "auto" }}
+              style={{ flex: 1, display: "flex", flexDirection: "column" }}
+              bodyStyle={{
+                display: "flex",
+                flexDirection: "column",
+                height: 400,
+              }}
             >
-              <CmtCard
-                className="border-round-2xl"
-                cont="hay"
-                userName="Vuong"
-              />
-              <CmtCard
-                className="border-round-2xl"
-                cont="hay"
-                userName="Vuong"
-              />
-              <CmtCard
-                className="border-round-2xl"
-                cont="hay"
-                userName="Vuong"
-              />
+              {/* Phần danh sách comment */}
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                {comments.map((cmt) => (
+  <CmtCard
+    key={cmt.id}
+    id={cmt.id}
+    cont={cmt.content}
+    userName={cmt.userName}
+    like={cmt.like}
+    dislike={cmt.dislike}
+    likedUsers={cmt.likedUsers || []}
+    dislikedUsers={cmt.dislikedUsers || []}
+    currentUser={userName}
+  />
+))}
+
+
+              </div>
+
+              {/* Ô nhập comment cố định */}
+              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                <Input
+                  placeholder="Nhập bình luận..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  onPressEnter={handleAddComment}
+                />
+                <Button type="primary" onClick={handleAddComment}>
+                  Gửi
+                </Button>
+              </div>
             </Card>
 
             <Card className="border-round-2xl" size="small">
@@ -305,6 +373,52 @@ export default function Homepage() {
           }
         `}</style>{" "}
       </Layout>
+      {tipsVisible && (
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+          }}
+        >
+          <Card
+            className="border-round-2xl"
+            title="💡 Mẹo"
+            size="small"
+            style={{ flex: 1 }}
+            extra={
+              <Button
+                icon="pi pi-times"
+                size="small"
+                text
+                onClick={() => setTipsVisible(false)}
+              />
+            }
+          >
+            {tips.map((tip) => (
+              <p key={tip.id}>{tip.content}</p>
+            ))}
+            {isAdmin && (
+              <div>
+                <input
+                  type="text"
+                  value={tipsContent}
+                  onChange={(e) => setTipsContent(e.target.value)}
+                  placeholder="Add a new tip..."
+                />
+                <button onClick={handleAddTip}>Add</button>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

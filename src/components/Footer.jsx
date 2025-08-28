@@ -60,7 +60,7 @@ export default function Footer() {
         <div className="col-lg-2 col-md-6">
           <h6 className="fw-bold mb-2">Tải ngay</h6>
           <div className="d-flex flex-column gap-2">
-            <img src="/{B76F85BE-4A14-4FFB-9DDE-FD218ECE3A35}.png" alt="App 1" width="120" className="border-round-lg" />
+            <img src="/{B76F85BE-4A14-4FFB-9DDE-FD218ECE3A35}.png" alt="App 1" width="120" className="border-round-lg cursor-pointer" onClick={()=>window.location.href="https://play.google.com/store/apps/details?id=com.eup.hanzii"}/>
             <img src="/{41EDC3FE-DE73-4E7A-8E3D-32C6CF0CBBB0}.png" alt="App 2" width="120" className="border-round-lg" />
             <img src="/{8F7B7854-C68A-4941-B8DA-732B7AC6D40C}.png" alt="App 3" width="120" className="border-round-lg" />
           </div>

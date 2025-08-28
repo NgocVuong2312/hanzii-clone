@@ -99,7 +99,6 @@ export const testList = [
         test: [
           { lab: "Test 1", cont: "50 câu - 60 phút - Đọc" },
           { lab: "Test 2", cont: "50 câu - 60 phút - Đọc" },
-          // ...
         ],
       },
     ],
