@@ -6,10 +6,11 @@ import "primeicons/primeicons.css";
 import { menuItems } from "../MenuItem";
 import { Image } from "primereact/image";
 import { Button } from "antd";
-import { Modal, Form, Input, Tabs } from "antd";
+import { Modal, Form, Input } from "antd";
 
 export default function Menu() {
-  const URL = "http://localhost:3002/User";
+  const createUserURL="http://localhost:8080/api/users/create"
+  const getUserURL="http://localhost:8080/api/users/"
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [isOpenLogout, setIsOpenLogout] = useState(false);
   const [isOpenRegister, setIsOpenRegister] = useState(false);
@@ -33,8 +34,10 @@ export default function Menu() {
     setIsOpenLogout(true);
   };
   const fetchUsers = async () => {
-    const response = await axios.get(URL);
-    setUsers(response.data);
+    const response = await axios.get(getUserURL);
+    setUsers(response.data.data[0]);
+    
+    
   };
   useEffect(() => {
     fetchUsers();
@@ -70,13 +73,13 @@ export default function Menu() {
       return;
     }
     const account = users.find(
-      (acc) => acc.email === userEmail && acc.password === userPassword
+      (acc) => acc.EMAIL === userEmail && acc.PASSWORD === userPassword
     );
 
     if (account) {
       setIsOpenLogin(false);
       setLoginSuccess(true);
-      localStorage.setItem("user", JSON.stringify({ username: account.username }));
+      localStorage.setItem("user", JSON.stringify({ userid: account.ID }));
       window.location.reload();
     } else {
       alert("Sai tài khoản hoặc mật khẩu!");
@@ -119,18 +122,18 @@ export default function Menu() {
       alert("Mật khẩu phải có ít nhất một ký tự đặc biệt!");
       return;
     }
-    const userExist = users.find((user) => user.email === userEmail);
+    const userExist = users.find((user) => user.EMAIL === userEmail||user.USERNAME === userName);
     if (userExist) {
       alert("User already exists");
       return;
     }
     const newUser = {
-      username: userName,
-      email: userEmail,
-      password: userPassword,
+      USERNAME: userName,
+      EMAIL: userEmail,
+      PASSWORD: userPassword,
     };
-    axios
-      .post(URL, newUser)
+    await axios
+      .post(createUserURL, newUser)
       .then((response) => {
         setUsers([...users, response.data]);
         alert("Registration successful");

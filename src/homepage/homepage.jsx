@@ -10,21 +10,93 @@ import { Layout, Card, Tag, Dropdown, Input } from "antd";
 import { Carousel } from "primereact/carousel";
 
 import { LeftOutlined, RightOutlined, ReadOutlined } from "@ant-design/icons";
+
 import { ItemCard, CmtCard } from "../components/Card";
 
 export default function Homepage() {
   const URL = "http://localhost:3002/tips";
   const CMT_URL = "http://localhost:3002/comments";
+  const VOLCAP_URL = "http://localhost:3002/volcap";
+  const USER_URL = "http://localhost:3002/User";
+  const VCH_URL = "http://localhost:3002/VolcapHistory";
+
+  const [currentVolcap, setCurrentVolcap] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [tips, setTips] = useState([]);
+  const [tipsContent, setTipsContent] = useState("");
+  const [comment, setComment] = useState("");
+  const [tipsVisible, setTipsVisible] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
+  const [date, setDate] = useState("Ngày");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [currentItem, setCurrentItem] = useState("Tu Vung");
+  const [vocapHistory, setVocapHistory] = useState([]);
+  const [vch, setVCH] = useState();
+  const [validHis, setValidHis] = useState(false);
+  const [User, setUser] = useState();
+  const [volcab, setVolcab] = useState();
+
+  const Userid = JSON.parse(localStorage.getItem("user"));
+  const UID = Userid?.userid;
+
+  // Fetch comments
   const fetchComments = async () => {
     const response = await axios.get(CMT_URL);
     setComments(response.data);
   };
-  const [commentLike, setCommentLike] = useState();
-  const [commentDislike, setCommentDislike] = useState();
+
+  const fetchVolcab = async () => {
+    const response = await axios.get(VOLCAP_URL);
+    setVolcab(response.data);
+  };
+  useEffect(() => {
+    fetchVolcab();
+  }, []);
   useEffect(() => {
     fetchComments();
   }, []);
-  const [comments, setComments] = useState([]);
+
+  const fetchVCH = async () => {
+    try {
+      const response = await axios.get(VCH_URL);
+      let finduid = response.data.find((h) => h?.userid === UID);
+
+      if (!finduid) {
+        const newRes = await axios.post(VCH_URL, { userid: UID, VCH: [] });
+        finduid = newRes.data;
+      }
+
+      setVCH(finduid);
+      setVocapHistory(finduid.VCH || []);
+      setValidHis(!!finduid?.VCH?.length);
+    } catch (err) {
+      console.error("Error fetching VCH:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (UID) fetchVCH();
+  }, [UID]);
+
+  const addVCH = async () => {
+    if (!vch?.id) return;
+    try {
+      await axios.patch(`${VCH_URL}/${vch.id}`, {
+        VCH: vocapHistory,
+      });
+      setVCH((prev) => ({ ...prev, VCH: vocapHistory }));
+      setValidHis(vocapHistory.length > 0);
+    } catch (err) {
+      console.error("Error updating VCH:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (vocapHistory.length > 0) {
+      addVCH();
+    }
+  }, [vocapHistory]);
   const handleAddComment = async () => {
     if (comment.trim() === "") return;
     try {
@@ -32,71 +104,72 @@ export default function Homepage() {
         id: comments.length + 1,
         content: comment,
         userName: userName || "Khách",
-        like: commentLike || 0,
-        dislike: commentDislike || 0,
+        like: 0,
+        dislike: 0,
         likedUsers: [],
-  dislikedUsers: [],
+        dislikedUsers: [],
       });
-      setComment(""); // clear input
-      fetchComments(); // reload lại list
+      setComment("");
+      fetchComments();
     } catch (error) {
       console.error("Error adding comment:", error);
     }
   };
 
+  // Add tip
   const handleAddTip = async () => {
     if (tipsContent.trim() === "") return;
     try {
-      const response = await axios.post(URL, {
+      await axios.post(URL, {
         id: tips.length + 1,
         content: tipsContent,
       });
+      setTipsContent("");
+      fetchTips(); // gọi lại API sau khi thêm tip
     } catch (error) {
       console.error("Error adding tip:", error);
     }
   };
-  const [tips, setTips] = useState([]);
-  const fetch = async () => {
+
+  // Fetch tips
+  const fetchTips = async () => {
     const response = await axios.get(URL);
     setTips(response.data);
   };
-  const [tipsContent, setTipsContent] = useState("");
+
   useEffect(() => {
-    fetch();
+    fetchTips();
   }, []);
+
+  // Date dropdown
   const datedropdown = [
-    {
-      key: "1",
-      label: "Hôm nay",
-      onClick: () => setdate("Hôm nay"),
-    },
-    {
-      key: "2",
-      label: "Tuần này",
-      onClick: () => setdate("Tuần này"),
-    },
-    {
-      key: "3",
-      label: "Tháng này",
-      onClick: () => setdate("Tháng này"),
-    },
+    { key: "1", label: "Hôm nay", onClick: () => setDate("Hôm nay") },
+    { key: "2", label: "Tuần này", onClick: () => setDate("Tuần này") },
+    { key: "3", label: "Tháng này", onClick: () => setDate("Tháng này") },
   ];
-  const [comment, setComment] = useState("");
-  const [tipsVisible, setTipsVisible] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
-  const [date, setdate] = useState("Ngày");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [currentItem, setCurrentItem] = useState("Han tu");
-  const User = JSON.parse(localStorage.getItem("user"));
-  console.log(tips);
+
+  // Fetch user
+  const handleUser = async () => {
+    try {
+      const response = await axios.get(USER_URL);
+      const filterUser = response.data.find(
+        (item) => item.id.toString().trim() === Userid.userid.toString().trim()
+      );
+      setUser(filterUser);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleUser();
+  }, []);
+
   useEffect(() => {
     if (User) {
       setIsLogin(true);
-      setUserName(User.username);
-      if (User.role == "admin") {
-        setIsAdmin(true);
-      }
+      setUserName(User.username || "");
+      setIsAdmin(User.role === "admin");
     } else {
       setIsLogin(false);
       setUserName("");
@@ -104,25 +177,48 @@ export default function Homepage() {
     }
   }, [User]);
 
+  // Fetch vocab
+  useEffect(() => {
+    const fetchVolcap = async () => {
+      const response = await axios.get(VOLCAP_URL);
+      const filteredData = response.data.filter(
+        (item) =>
+          item.type?.toString().trim().toLowerCase() ===
+          currentItem.toString().trim().toLowerCase()
+      );
+      setCurrentVolcap(filteredData);
+    };
+    fetchVolcap();
+  }, [currentItem]);
+  const getVCH = () => {
+    if (!vch || !volcab) return [];
+    return vch.VCH.map((m) => volcab.find((k) => k.id === m)).filter(Boolean);
+  };
+
   return (
     <div>
+      <button onClick={()=>console.log(UID)
+      }>TESTER</button>
       <div className="m-4 flex flex-column align-items-center">
         {isLogin && <h2>Xin chào, {userName}</h2>}
+
+        {/* Search + filter */}
         <div className="flex align-items-center flex-column w-full">
-          <div className="d-flex align-items-center border-blue-400	border border-round-3xl px-3 py-2 shadow-sm m-auto  w-7 bg-white h-full">
+          <div className="d-flex align-items-center border-blue-400 border border-round-3xl px-3 py-2 shadow-sm m-auto w-7 bg-white h-full">
             <i className="pi pi-search"></i>
             <input
               type="text"
               className="form-control border-0 shadow-none bg-transparent"
               placeholder="Nhập tiếng Trung"
             />
-            <i className="pi pi-microphone "></i>
+            <i className="pi pi-microphone"></i>
             <i className="pi pi-pencil"></i>
           </div>
+
           <div className="flex justify-content-center align-items-center mt-3">
             {itemsList.map((m) => (
               <a
-                key={m.label}
+                key={m.cont}
                 style={
                   currentItem === m.cont
                     ? { backgroundColor: "#47609f", color: "white" }
@@ -137,26 +233,51 @@ export default function Homepage() {
           </div>
         </div>
       </div>
+
+      {/* Layout */}
       <Layout style={{ backgroundColor: "#f0f2f5" }}>
         <div className="responsive-layout">
-          {/* Cột trái */}
+          {/* Left column */}
           <div className="column left-col">
             <Card className="border-round-2xl" title="Từ khóa hot" size="small">
-              {currentItem}
+              {currentVolcap.map((m) => (
+                <Tag
+                  key={m.id}
+                  color="blue"
+                  style={{ marginBottom: 8, cursor: "pointer" }}
+                  onClick={() => {
+                    setVocapHistory((prev) => {
+                      if (prev.includes(m.id)) return prev;
+                      return [...prev, m.id];
+                    });
+                  }}
+                >
+                  {m.content}
+                </Tag>
+              ))}
             </Card>
 
             <Card className="border-round-2xl" title="Lịch sử" size="small">
-              <p className="mb-0">Lịch sử</p>
-              <div className="flex flex-column text-center">
-                <Image
-                  className="p-0"
-                  src="/status.png"
-                  alt="Image"
-                  width="100px"
-                  height="100px"
-                />
-                <p className="mb-0">Khong co du lieu</p>
-              </div>
+              {!validHis ? (
+                <div className="flex flex-column text-center">
+                  <Image
+                    className="p-0"
+                    src="/status.png"
+                    alt="Image"
+                    width="100px"
+                    height="100px"
+                  />
+                  <p className="mb-0">Không có dữ liệu</p>
+                </div>
+              ) : (
+                <div>
+                  {getVCH().map((item) => (
+                    <Tag key={item.id} color="purple" style={{ margin: 4 }}>
+                      {item.content}
+                    </Tag>
+                  ))}
+                </div>
+              )}
             </Card>
 
             <Card
@@ -178,6 +299,7 @@ export default function Homepage() {
                   </div>
                 </div>
               </div>
+
               <div style={{ marginTop: 12, textAlign: "center" }}>
                 <Button
                   icon={<LeftOutlined />}
@@ -190,7 +312,7 @@ export default function Homepage() {
             </Card>
           </div>
 
-          {/* Cột giữa */}
+          {/* Middle column */}
           <div className="column middle-col">
             <Card className="border-round-2xl" bodyStyle={{ padding: 0 }}>
               <Card
@@ -237,12 +359,10 @@ export default function Homepage() {
 
             <Card
               className="border-round-2xl"
-              title={"💡 Mẹo" + (tips.length > 0 ? ` (${tips.length})` : "")}
+              title={`💡 Mẹo ${tips.length > 0 ? `(${tips.length})` : ""}`}
               size="small"
               style={{ flex: 1 }}
-              onClick={() => {
-                setTipsVisible(!tipsVisible);
-              }}
+              onClick={() => setTipsVisible(!tipsVisible)}
             >
               {tips[0]?.content}
             </Card>
@@ -259,7 +379,7 @@ export default function Homepage() {
             </Card>
           </div>
 
-          {/* Cột phải */}
+          {/* Right column */}
           <div className="column right-col">
             <Card
               className="border-round-2xl"
@@ -271,7 +391,7 @@ export default function Homepage() {
                   placement="bottomRight"
                   trigger={["click"]}
                 >
-                  <Button trigger="click" size="small" text>
+                  <Button size="small" text>
                     {date}
                   </Button>
                 </Dropdown>
@@ -283,26 +403,24 @@ export default function Homepage() {
                 height: 400,
               }}
             >
-              {/* Phần danh sách comment */}
+              {/* Comments */}
               <div style={{ flex: 1, overflowY: "auto" }}>
                 {comments.map((cmt) => (
-  <CmtCard
-    key={cmt.id}
-    id={cmt.id}
-    cont={cmt.content}
-    userName={cmt.userName}
-    like={cmt.like}
-    dislike={cmt.dislike}
-    likedUsers={cmt.likedUsers || []}
-    dislikedUsers={cmt.dislikedUsers || []}
-    currentUser={userName}
-  />
-))}
-
-
+                  <CmtCard
+                    key={cmt.id}
+                    id={cmt.id}
+                    cont={cmt.content}
+                    userName={cmt.userName}
+                    like={cmt.like}
+                    dislike={cmt.dislike}
+                    likedUsers={cmt.likedUsers || []}
+                    dislikedUsers={cmt.dislikedUsers || []}
+                    currentUser={UID}
+                  />
+                ))}
               </div>
 
-              {/* Ô nhập comment cố định */}
+              {/* Comment input */}
               <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
                 <Input
                   placeholder="Nhập bình luận..."
@@ -331,6 +449,7 @@ export default function Homepage() {
             </Card>
           </div>
         </div>
+
         {/* CSS */}
         <style jsx>{`
           .responsive-layout {
@@ -341,7 +460,7 @@ export default function Homepage() {
             display: flex;
             flex-direction: column;
             gap: 16px;
-          } /* Desktop order & size */
+          }
           .left-col {
             order: 1;
             flex: 1;
@@ -353,7 +472,7 @@ export default function Homepage() {
           .right-col {
             order: 3;
             flex: 1;
-          } /* Mobile */
+          }
           @media (max-width: 768px) {
             .responsive-layout {
               flex-direction: column;
@@ -371,8 +490,10 @@ export default function Homepage() {
               flex: 1;
             }
           }
-        `}</style>{" "}
+        `}</style>
       </Layout>
+
+      {/* Tips Modal */}
       {tipsVisible && (
         <div
           style={{
@@ -402,18 +523,54 @@ export default function Homepage() {
               />
             }
           >
-            {tips.map((tip) => (
-              <p key={tip.id}>{tip.content}</p>
-            ))}
+            {/* Danh sách mẹo có scroll */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                maxHeight: 200, // chiều cao tối đa
+                overflowY: "auto", // bật scroll dọc
+                paddingRight: 4,
+              }}
+            >
+              {tips.map((tip) => (
+                <div
+                  key={tip.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "6px 10px",
+                    background: "#f6f9ff",
+                    borderRadius: "8px",
+                    border: "1px solid #e6ecf5",
+                  }}
+                >
+                  <span style={{ marginRight: 8 }}>💡</span>
+                  <span>{tip.content}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Ô nhập cho admin */}
             {isAdmin && (
-              <div>
-                <input
-                  type="text"
+              <div
+                style={{
+                  marginTop: 12,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Input
+                  placeholder="Thêm mẹo mới..."
                   value={tipsContent}
                   onChange={(e) => setTipsContent(e.target.value)}
-                  placeholder="Add a new tip..."
+                  onPressEnter={handleAddTip}
                 />
-                <button onClick={handleAddTip}>Add</button>
+                <Button type="primary" onClick={handleAddTip}>
+                  Thêm
+                </Button>
               </div>
             )}
           </Card>

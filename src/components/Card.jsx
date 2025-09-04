@@ -26,7 +26,6 @@ export const CmtCard = ({ id, cont, userName, like, dislike, likedUsers = [], di
   const [dislikeCount, setDislikeCount] = useState(dislike);
   const [liked, setLiked] = useState(likedUsers.includes(currentUser));
   const [disliked, setDisliked] = useState(dislikedUsers.includes(currentUser));
-  console.log(currentUser);
   
   const CMT_URL = "http://localhost:3002/comments";
 
@@ -43,59 +42,68 @@ export const CmtCard = ({ id, cont, userName, like, dislike, likedUsers = [], di
     }
   };
 
-  const handleLike = () => {
-    let newLike = likeCount;
-    let newDislike = dislikeCount;
-    let newLikedUsers = [...likedUsers];
-    let newDislikedUsers = [...dislikedUsers];
+const handleLike = () => {
+  let newLike = likeCount;
+  let newDislike = dislikeCount;
+  let newLikedUsers = [...likedUsers];
+  let newDislikedUsers = [...dislikedUsers];
 
-    if (liked) {
-      newLike -= 1;
-      newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
-      setLiked(false);
-    } else {
+  if (liked) {
+    // Bỏ like
+    newLike -= 1;
+    newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
+    setLiked(false);
+  } else {
+    // Thêm like
+    if (!newLikedUsers.includes(currentUser)) {
       newLike += 1;
       newLikedUsers.push(currentUser);
-      if (disliked) {
-        newDislike -= 1;
-        newDislikedUsers = newDislikedUsers.filter((u) => u !== currentUser);
-        setDisliked(false);
-      }
-      setLiked(true);
     }
-
-    setLikeCount(newLike);
-    setDislikeCount(newDislike);
-
-    updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
-  };
-
-  const handleDislike = () => {
-    let newLike = likeCount;
-    let newDislike = dislikeCount;
-    let newLikedUsers = [...likedUsers];
-    let newDislikedUsers = [...dislikedUsers];
-
+    // Nếu đang dislike thì bỏ
     if (disliked) {
       newDislike -= 1;
       newDislikedUsers = newDislikedUsers.filter((u) => u !== currentUser);
       setDisliked(false);
-    } else {
+    }
+    setLiked(true);
+  }
+
+  setLikeCount(newLike);
+  setDislikeCount(newDislike);
+  updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
+};
+
+const handleDislike = () => {
+  let newLike = likeCount;
+  let newDislike = dislikeCount;
+  let newLikedUsers = [...likedUsers];
+  let newDislikedUsers = [...dislikedUsers];
+
+  if (disliked) {
+    // Bỏ dislike
+    newDislike -= 1;
+    newDislikedUsers = newDislikedUsers.filter((u) => u !== currentUser);
+    setDisliked(false);
+  } else {
+    // Thêm dislike
+    if (!newDislikedUsers.includes(currentUser)) {
       newDislike += 1;
       newDislikedUsers.push(currentUser);
-      if (liked) {
-        newLike -= 1;
-        newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
-        setLiked(false);
-      }
-      setDisliked(true);
     }
+    // Nếu đang like thì bỏ
+    if (liked) {
+      newLike -= 1;
+      newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
+      setLiked(false);
+    }
+    setDisliked(true);
+  }
 
-    setLikeCount(newLike);
-    setDislikeCount(newDislike);
+  setLikeCount(newLike);
+  setDislikeCount(newDislike);
+  updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
+};
 
-    updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
-  };
 
   return (
     <div className="flex flex-column border-bottom-1 py-2">

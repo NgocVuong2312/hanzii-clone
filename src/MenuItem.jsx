@@ -38,21 +38,21 @@ export const itemsList = [
     label: "Từ Vựng",
     cont: "Tu Vung",
   },
-  { label: "Hán tự", cont: "Han tu" },
-  { label: "Ví dụ", cont: "vi du" },
+  { label: "Hán tự", cont: "Han Tu" },
+  { label: "Ví dụ", cont: "Vi Du" },
   {
     label: "Ngữ pháp",
-    cont: "ngu phap",
+    cont: "Ngu Phap",
   },
   {
     label: "Trung Trung",
-    cont: "Trung trung",
+    cont: "Trung Trung",
   },
   {
     label: "Trung Anh",
-    cont: "Trung anh",
+    cont: "Trung Anh",
   },
-];
+];//cbi bo
 export const volcapList = [
   {
     label: "HSK 1",
