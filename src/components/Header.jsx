@@ -9,8 +9,10 @@ import { Button } from "antd";
 import { Modal, Form, Input } from "antd";
 
 export default function Menu() {
-  const createUserURL="http://localhost:8080/api/users/create"
-  const getUserURL="http://localhost:8080/api/users/"
+  const [test, setTest] = useState();
+  const createUserURL = "http://localhost:8080/api/users/create";
+  const getUserURL = "http://localhost:8080/api/users/";
+  const verifiedURL = "http://localhost:8080/api/users/compare";
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [isOpenLogout, setIsOpenLogout] = useState(false);
   const [isOpenRegister, setIsOpenRegister] = useState(false);
@@ -36,8 +38,6 @@ export default function Menu() {
   const fetchUsers = async () => {
     const response = await axios.get(getUserURL);
     setUsers(response.data.data[0]);
-    
-    
   };
   useEffect(() => {
     fetchUsers();
@@ -46,7 +46,7 @@ export default function Menu() {
     setIsOpenLogin(true); // mở popup khi bấm nút login
     setIsOpenRegister(false);
   };
-  const login = () => {
+  const login = async () => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regex.test(userEmail)) {
       alert("Email không hợp lệ!");
@@ -72,14 +72,26 @@ export default function Menu() {
       alert("Mật khẩu phải có ít nhất một ký tự đặc biệt!");
       return;
     }
-    const account = users.find(
-      (acc) => acc.EMAIL === userEmail && acc.PASSWORD === userPassword
-    );
+    let verified = false;
+    await axios
+      .post(verifiedURL, {
+        PASSWORD: userPassword,
+        EMAIL: userEmail,
+      })
+      .then((response) => {
+        verified = response.data.success;
+      });
+    console.log(verified);
 
-    if (account) {
+    if (verified) {
       setIsOpenLogin(false);
       setLoginSuccess(true);
-      localStorage.setItem("user", JSON.stringify({ userid: account.ID }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          userid: users.find((acc) => acc.EMAIL === userEmail).ID,
+        })
+      );
       window.location.reload();
     } else {
       alert("Sai tài khoản hoặc mật khẩu!");
@@ -122,7 +134,9 @@ export default function Menu() {
       alert("Mật khẩu phải có ít nhất một ký tự đặc biệt!");
       return;
     }
-    const userExist = users.find((user) => user.EMAIL === userEmail||user.USERNAME === userName);
+    const userExist = users.find(
+      (user) => user.EMAIL === userEmail || user.USERNAME === userName
+    );
     if (userExist) {
       alert("User already exists");
       return;
@@ -146,6 +160,7 @@ export default function Menu() {
 
   return (
     <div className="w-full">
+
       {/* Thanh menu chính */}
       <div className="flex justify-content-between align-items-center mt-3 bg-white-alpha-80 p-1 border-round-2xl relative">
         {/* Icon bars cho mobile */}
@@ -348,7 +363,12 @@ export default function Menu() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button
+              onClick={() => window.location.reload()}
+              type="primary"
+              htmlType="submit"
+              block
+            >
               Đăng ký
             </Button>
           </Form.Item>

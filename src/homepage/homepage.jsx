@@ -18,6 +18,7 @@ export default function Homepage() {
   const CMT_URL = "http://localhost:3002/comments";
   const VOLCAP_URL = "http://localhost:3002/volcap";
   const USER_URL = "http://localhost:3002/User";
+  const getUserUrl = (id) => `http://localhost:8080/api/users/get/${id}`;
   const VCH_URL = "http://localhost:3002/VolcapHistory";
 
   const [currentVolcap, setCurrentVolcap] = useState([]);
@@ -151,11 +152,9 @@ export default function Homepage() {
   // Fetch user
   const handleUser = async () => {
     try {
-      const response = await axios.get(USER_URL);
-      const filterUser = response.data.find(
-        (item) => item.id.toString().trim() === Userid.userid.toString().trim()
-      );
-      setUser(filterUser);
+      const response = await axios.get(getUserUrl(UID));
+      const getData = response.data.data[0];
+      setUser(getData[0]);
     } catch (error) {
       console.error("Error fetching user:", error);
     }
@@ -163,13 +162,13 @@ export default function Homepage() {
 
   useEffect(() => {
     handleUser();
-  }, []);
+  }, [isLogin]);
 
   useEffect(() => {
     if (User) {
       setIsLogin(true);
-      setUserName(User.username || "");
-      setIsAdmin(User.role === "admin");
+      setUserName(User.USERNAME || "");
+      setIsAdmin(User.ROLE === "admin");
     } else {
       setIsLogin(false);
       setUserName("");
@@ -197,8 +196,7 @@ export default function Homepage() {
 
   return (
     <div>
-      <button onClick={()=>console.log(UID)
-      }>TESTER</button>
+      <button onClick={() => { console.log(User); }}> test</button>
       <div className="m-4 flex flex-column align-items-center">
         {isLogin && <h2>Xin chào, {userName}</h2>}
 
@@ -579,3 +577,4 @@ export default function Homepage() {
     </div>
   );
 }
+ 
