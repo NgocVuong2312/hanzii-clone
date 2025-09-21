@@ -9,7 +9,6 @@ import { Button } from "antd";
 import { Modal, Form, Input } from "antd";
 
 export default function Menu() {
-  const [test, setTest] = useState();
   const createUserURL = "http://localhost:8080/api/users/create";
   const getUserURL = "http://localhost:8080/api/users/";
   const verifiedURL = "http://localhost:8080/api/users/compare";

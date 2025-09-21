@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 import { Button } from "primereact/button";
 import { Image } from "primereact/image";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
@@ -8,19 +8,18 @@ import "primeicons/primeicons.css";
 import { caro, itemsList, volcapList } from "../MenuItem";
 import { Layout, Card, Tag, Dropdown, Input } from "antd";
 import { Carousel } from "primereact/carousel";
-
 import { LeftOutlined, RightOutlined, ReadOutlined } from "@ant-design/icons";
-
 import { ItemCard, CmtCard } from "../components/Card";
 
 export default function Homepage() {
-  const URL = "http://localhost:3002/tips";
-  const CMT_URL = "http://localhost:3002/comments";
-  const VOLCAP_URL = "http://localhost:3002/volcap";
-  const USER_URL = "http://localhost:3002/User";
-  const getUserUrl = (id) => `http://localhost:8080/api/users/get/${id}`;
-  const VCH_URL = "http://localhost:3002/VolcapHistory";
-
+  const getTipsUrl = "http://localhost:8080/api/tips/get";
+  const createTipsUrl = "http://localhost:8080/api/tips/create";
+  const getCMT_URL = "http://localhost:8080/api/comments";
+  const createCMT_URL = "http://localhost:8080/api/comments/create";
+  const getUserUrl = "http://localhost:8080/api/users/get/";
+  const getVolcabUrl = "http://localhost:8080/api/volcap";
+  const updateUserVolcapHistoryUrl =
+    "http://localhost:8080/api/users/updateVolcapId/";
   const [currentVolcap, setCurrentVolcap] = useState([]);
   const [comments, setComments] = useState([]);
   const [tips, setTips] = useState([]);
@@ -28,7 +27,7 @@ export default function Homepage() {
   const [comment, setComment] = useState("");
   const [tipsVisible, setTipsVisible] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
-  const [date, setDate] = useState("Ngày");
+  const [date, setDate] = useState("Hôm nay");
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [currentItem, setCurrentItem] = useState("Tu Vung");
@@ -36,58 +35,67 @@ export default function Homepage() {
   const [vch, setVCH] = useState();
   const [validHis, setValidHis] = useState(false);
   const [User, setUser] = useState();
-  const [volcab, setVolcab] = useState();
-
+  const [volcab, setVolcab] = useState([]);
+  const [rankedTime, setRankedTime] = useState();
+  const nav = useNavigate();
+  const currentDate = new Date();
   const Userid = JSON.parse(localStorage.getItem("user"));
   const UID = Userid?.userid;
 
   // Fetch comments
   const fetchComments = async () => {
-    const response = await axios.get(CMT_URL);
-    setComments(response.data);
-  };
+    const response = await axios.get(getCMT_URL);
 
-  const fetchVolcab = async () => {
-    const response = await axios.get(VOLCAP_URL);
-    setVolcab(response.data);
-  };
-  useEffect(() => {
-    fetchVolcab();
-  }, []);
-  useEffect(() => {
-    fetchComments();
-  }, []);
+    //theo ngay
+    if (date === "Hôm nay") {
+      const filteredData = response.data.data[0].filter((m) => {
+        const date = new Date(m.created_date);
+        if (
+          date.getDate() === currentDate.getDate() &&
+          date.getMonth() === currentDate.getMonth() &&
+          date.getFullYear() === currentDate.getFullYear()
+        ) {
+          return m;
+        }
+      });
+      setComments(filteredData);
+    } else if (date === "Tháng này") {
+      const filteredData = response.data.data[0].filter((m) => {
+        const date = new Date(m.created_date);
+        if (
+          date.getMonth() === currentDate.getMonth() &&
+          date.getFullYear() === currentDate.getFullYear()
+        ) {
+          return m;
+        }
+      });
+      setComments(filteredData);
+    } else if (date === "Tuần này") {
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Thứ 2
 
-  const fetchVCH = async () => {
-    try {
-      const response = await axios.get(VCH_URL);
-      let finduid = response.data.find((h) => h?.userid === UID);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // Chủ nhật
 
-      if (!finduid) {
-        const newRes = await axios.post(VCH_URL, { userid: UID, VCH: [] });
-        finduid = newRes.data;
-      }
-
-      setVCH(finduid);
-      setVocapHistory(finduid.VCH || []);
-      setValidHis(!!finduid?.VCH?.length);
-    } catch (err) {
-      console.error("Error fetching VCH:", err);
+      const filteredData = response.data.data[0].filter((m) => {
+        const created = new Date(m.created_date);
+        return created >= startOfWeek && created <= endOfWeek;
+      });
+      setComments(filteredData)
     }
   };
-
   useEffect(() => {
-    if (UID) fetchVCH();
-  }, [UID]);
+    fetchComments();
+  }, [date]);
 
   const addVCH = async () => {
-    if (!vch?.id) return;
+    const filteredHistory = vocapHistory.filter((id) => !vch.includes(id));
+
+    setVocapHistory(filteredHistory);
     try {
-      await axios.patch(`${VCH_URL}/${vch.id}`, {
-        VCH: vocapHistory,
+      await axios.patch(updateUserVolcapHistoryUrl + UID, {
+        VHID: [...vch, ...filteredHistory],
       });
-      setVCH((prev) => ({ ...prev, VCH: vocapHistory }));
-      setValidHis(vocapHistory.length > 0);
     } catch (err) {
       console.error("Error updating VCH:", err);
     }
@@ -98,17 +106,13 @@ export default function Homepage() {
       addVCH();
     }
   }, [vocapHistory]);
+
   const handleAddComment = async () => {
     if (comment.trim() === "") return;
     try {
-      await axios.post(CMT_URL, {
-        id: comments.length + 1,
-        content: comment,
-        userName: userName || "Khách",
-        like: 0,
-        dislike: 0,
-        likedUsers: [],
-        dislikedUsers: [],
+      await axios.post(createCMT_URL, {
+        CONTENT: comment,
+        UID: UID,
       });
       setComment("");
       fetchComments();
@@ -121,8 +125,7 @@ export default function Homepage() {
   const handleAddTip = async () => {
     if (tipsContent.trim() === "") return;
     try {
-      await axios.post(URL, {
-        id: tips.length + 1,
+      await axios.post(createTipsUrl, {
         content: tipsContent,
       });
       setTipsContent("");
@@ -134,8 +137,9 @@ export default function Homepage() {
 
   // Fetch tips
   const fetchTips = async () => {
-    const response = await axios.get(URL);
-    setTips(response.data);
+    const response = await axios.get(getTipsUrl);
+    const data = response.data.data[0];
+    setTips(data || []);
   };
 
   useEffect(() => {
@@ -144,15 +148,34 @@ export default function Homepage() {
 
   // Date dropdown
   const datedropdown = [
-    { key: "1", label: "Hôm nay", onClick: () => setDate("Hôm nay") },
-    { key: "2", label: "Tuần này", onClick: () => setDate("Tuần này") },
-    { key: "3", label: "Tháng này", onClick: () => setDate("Tháng này") },
+    {
+      key: "1",
+      label: "Hôm nay",
+      onClick: () => {
+        setDate("Hôm nay");
+        setRankedTime(currentDate.getDate());
+      },
+    },
+    {
+      key: "2",
+      label: "Tuần này",
+      onClick: () => {
+        setDate("Tuần này");
+        setRankedTime(currentDate.getDay());
+      },
+    },
+    {
+      key: "3",
+      label: "Tháng này",
+      onClick: () => {
+        setDate("Tháng này");
+        setRankedTime(currentDate.getMonth());
+      },
+    },
   ];
-
-  // Fetch user
   const handleUser = async () => {
     try {
-      const response = await axios.get(getUserUrl(UID));
+      const response = await axios.get(getUserUrl + UID);
       const getData = response.data.data[0];
       setUser(getData[0]);
     } catch (error) {
@@ -163,6 +186,24 @@ export default function Homepage() {
   useEffect(() => {
     handleUser();
   }, [isLogin]);
+  const handleVolcapHistory = async () => {
+    try {
+      const response = await axios.get(getUserUrl + UID);
+      const getData = response.data.data[0];
+      console.log(getData.VHID);
+      
+      setVCH(getData[0]?.VHID || []);
+      if (getData[0]?.VHID) {
+        setValidHis(true);
+      }
+    } catch (error) {
+      console.error("Error fetching volcaphistory:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleVolcapHistory();
+  }, [validHis]);
 
   useEffect(() => {
     if (User) {
@@ -179,24 +220,27 @@ export default function Homepage() {
   // Fetch vocab
   useEffect(() => {
     const fetchVolcap = async () => {
-      const response = await axios.get(VOLCAP_URL);
-      const filteredData = response.data.filter(
+      const response = await axios.get(getVolcabUrl);
+
+      const data = response.data.data;
+      //chỗ này cần sửa logic, sau sửa để lọc theo số lượng từ vựng được visit nhiều nhất tùy theo từng mục((categories)) chỗ này sửa sau khi xây xong dataset từ điển tiếng trung cho trang web, 
+      const filteredData = data.filter(
         (item) =>
           item.type?.toString().trim().toLowerCase() ===
           currentItem.toString().trim().toLowerCase()
       );
-      setCurrentVolcap(filteredData);
+      setCurrentVolcap(filteredData || []);
+      setVolcab(data|| []); 
+      console.log(data);
+      
     };
     fetchVolcap();
   }, [currentItem]);
-  const getVCH = () => {
-    if (!vch || !volcab) return [];
-    return vch.VCH.map((m) => volcab.find((k) => k.id === m)).filter(Boolean);
-  };
 
   return (
     <div>
-      <button onClick={() => { console.log(User); }}> test</button>
+      <button onClick={() => {console.log(comments);
+      }}> test</button>
       <div className="m-4 flex flex-column align-items-center">
         {isLogin && <h2>Xin chào, {userName}</h2>}
 
@@ -238,7 +282,7 @@ export default function Homepage() {
           {/* Left column */}
           <div className="column left-col">
             <Card className="border-round-2xl" title="Từ khóa hot" size="small">
-              {currentVolcap.map((m) => (
+              {volcab.map((m) => (
                 <Tag
                   key={m.id}
                   color="blue"
@@ -248,9 +292,12 @@ export default function Homepage() {
                       if (prev.includes(m.id)) return prev;
                       return [...prev, m.id];
                     });
+                    nav("/volcabularypage", {
+                      state: { data: { content: m.id } },
+                    });
                   }}
                 >
-                  {m.content}
+                  {m.name}
                 </Tag>
               ))}
             </Card>
@@ -269,9 +316,9 @@ export default function Homepage() {
                 </div>
               ) : (
                 <div>
-                  {getVCH().map((item) => (
+                  {vch.map((item) => (
                     <Tag key={item.id} color="purple" style={{ margin: 4 }}>
-                      {item.content}
+                      {volcab?.find((m) => m.id === item)?.name}
                     </Tag>
                   ))}
                 </div>
@@ -404,31 +451,8 @@ export default function Homepage() {
               {/* Comments */}
               <div style={{ flex: 1, overflowY: "auto" }}>
                 {comments.map((cmt) => (
-                  <CmtCard
-                    key={cmt.id}
-                    id={cmt.id}
-                    cont={cmt.content}
-                    userName={cmt.userName}
-                    like={cmt.like}
-                    dislike={cmt.dislike}
-                    likedUsers={cmt.likedUsers || []}
-                    dislikedUsers={cmt.dislikedUsers || []}
-                    currentUser={UID}
-                  />
+                  <CmtCard key={cmt.ID} id={cmt.ID} currentUser={UID} />
                 ))}
-              </div>
-
-              {/* Comment input */}
-              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                <Input
-                  placeholder="Nhập bình luận..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  onPressEnter={handleAddComment}
-                />
-                <Button type="primary" onClick={handleAddComment}>
-                  Gửi
-                </Button>
               </div>
             </Card>
 
@@ -577,4 +601,3 @@ export default function Homepage() {
     </div>
   );
 }
- 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import "primeicons/primeicons.css";
@@ -21,115 +21,127 @@ export const ItemCard = ({ icon, cont, state }) => {
     </div>
   );
 };
-export const CmtCard = ({ id, cont, userName, like, dislike, likedUsers = [], dislikedUsers = [], currentUser }) => {
-  const [likeCount, setLikeCount] = useState(like);
-  const [dislikeCount, setDislikeCount] = useState(dislike);
-  const [liked, setLiked] = useState(likedUsers.includes(currentUser));
-  const [disliked, setDisliked] = useState(dislikedUsers.includes(currentUser));
-  
-  const CMT_URL = "http://localhost:3002/comments";
+export const CmtCard = ({ id, currentUser }) => {
+  const getCMT_URL = "http://localhost:8080/api/comments/get/";
+  const patchCMT_URL = "http://localhost:8080/api/comments/update/";
+  const getUserUrl = `http://localhost:8080/api/users/get/`;
+  const [comments, setComments] = useState([]);
+  const [likedUsers, setLikedUsers] = useState([]);
+  const [dislikedUsers, setDislikedUsers] = useState([]);
+  const [user, setUser] = useState("Khách");
 
-  const updateDB = async (newLike, newDislike, newLikedUsers, newDislikedUsers) => {
+  const fetchComments = async () => {
     try {
-      await axios.patch(`${CMT_URL}/${id}`, {
-        like: newLike,
-        dislike: newDislike,
-        likedUsers: newLikedUsers,
-        dislikedUsers: newDislikedUsers,
-      });
-    } catch (err) {
-      console.error("Error updating comment:", err);
+      const response = await axios.get(getCMT_URL + id);
+      const data = response.data.data[0];
+      setComments(data[0]);
+      setLikedUsers(data[0].LIKEDUSERS||[]);
+      setDislikedUsers(data[0].DISLIKEDUSERS||[]);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
     }
   };
-
-const handleLike = () => {
-  let newLike = likeCount;
-  let newDislike = dislikeCount;
-  let newLikedUsers = [...likedUsers];
-  let newDislikedUsers = [...dislikedUsers];
-
-  if (liked) {
-    // Bỏ like
-    newLike -= 1;
-    newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
-    setLiked(false);
-  } else {
-    // Thêm like
-    if (!newLikedUsers.includes(currentUser)) {
-      newLike += 1;
-      newLikedUsers.push(currentUser);
+  useEffect(() => {
+    fetchComments();
+  }, []);
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(getUserUrl + comments.UID);
+      const data = response.data.data[0];
+      setUser(data[0]);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return "Khách";
     }
-    // Nếu đang dislike thì bỏ
-    if (disliked) {
-      newDislike -= 1;
-      newDislikedUsers = newDislikedUsers.filter((u) => u !== currentUser);
-      setDisliked(false);
+  };
+  useEffect(() => {
+    if (comments.UID) {
+      fetchUsers();
     }
-    setLiked(true);
-  }
+  }, [comments]);
+  const handleLike = async () => {
+    let updatedLikes = likedUsers;
+    let updatedDislikes = dislikedUsers;
 
-  setLikeCount(newLike);
-  setDislikeCount(newDislike);
-  updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
-};
-
-const handleDislike = () => {
-  let newLike = likeCount;
-  let newDislike = dislikeCount;
-  let newLikedUsers = [...likedUsers];
-  let newDislikedUsers = [...dislikedUsers];
-
-  if (disliked) {
-    // Bỏ dislike
-    newDislike -= 1;
-    newDislikedUsers = newDislikedUsers.filter((u) => u !== currentUser);
-    setDisliked(false);
-  } else {
-    // Thêm dislike
-    if (!newDislikedUsers.includes(currentUser)) {
-      newDislike += 1;
-      newDislikedUsers.push(currentUser);
+    // Nếu đang dislike thì bỏ khỏi dislike
+    if (updatedDislikes.includes(currentUser)) {
+      updatedDislikes = updatedDislikes.filter((u) => u !== currentUser);
+      setDislikedUsers(updatedDislikes);
+      await axios.patch(patchCMT_URL + id, {
+        DISLIKEDUSERS: JSON.stringify(updatedDislikes),
+      });
     }
-    // Nếu đang like thì bỏ
-    if (liked) {
-      newLike -= 1;
-      newLikedUsers = newLikedUsers.filter((u) => u !== currentUser);
-      setLiked(false);
+
+    // Toggle like
+    if (updatedLikes.includes(currentUser)) {
+      updatedLikes = updatedLikes.filter((u) => u !== currentUser);
+    } else {
+      updatedLikes = [...updatedLikes, currentUser];
     }
-    setDisliked(true);
-  }
 
-  setLikeCount(newLike);
-  setDislikeCount(newDislike);
-  updateDB(newLike, newDislike, newLikedUsers, newDislikedUsers);
-};
+    setLikedUsers(updatedLikes);
+    await axios.patch(patchCMT_URL + id, {
+      LIKEDUSERS: JSON.stringify(updatedLikes),
+    });
+  };
 
+  const handleDislike = async () => {
+    let updatedLikes = likedUsers;
+    let updatedDislikes = dislikedUsers;
+
+    // Nếu đang like thì bỏ khỏi like
+    if (updatedLikes.includes(currentUser)) {
+      updatedLikes = updatedLikes.filter((u) => u !== currentUser);
+      setLikedUsers(updatedLikes);
+      await axios.patch(patchCMT_URL + id, {
+        LIKEDUSERS: JSON.stringify(updatedLikes),
+      });
+    }
+
+    // Toggle dislike
+    if (updatedDislikes.includes(currentUser)) {
+      updatedDislikes = updatedDislikes.filter((u) => u !== currentUser);
+    } else {
+      updatedDislikes = [...updatedDislikes, currentUser];
+    }
+
+    setDislikedUsers(updatedDislikes);
+    await axios.patch(patchCMT_URL + id, {
+      DISLIKEDUSERS: JSON.stringify(updatedDislikes),
+    });
+  };
 
   return (
     <div className="flex flex-column border-bottom-1 py-2">
-      <p className="m-0">{cont}</p>
+      {/* <button
+        onClick={() => {
+          console.log(likedUsers, dislikedUsers);
+        }}
+      >
+        Log Comments
+      </button> */}
+      <p className="m-0">{comments.CONTENT}</p>
       <div className="flex flex-row align-items-center justify-content-between gap-4 mt-1">
         <div className="flex flex-row align-items-center gap-3">
           <i
-            className={`pi pi-thumbs-up ${liked ? "text-primary" : ""}`}
+            className={`pi pi-thumbs-up `}
             style={{ fontSize: "1rem", cursor: "pointer" }}
             onClick={handleLike}
           />
-          <p className="m-0">{likeCount}</p>
+          <p className="m-0">{likedUsers?.length || 0}</p>
 
           <i
-            className={`pi pi-thumbs-down ${disliked ? "text-primary" : ""}`}
+            className={`pi pi-thumbs-down `}
             style={{ fontSize: "1rem", cursor: "pointer" }}
             onClick={handleDislike}
-          />  
-          <p className="m-0">{dislikeCount}</p>
+          />
+          <p className="m-0">{dislikedUsers?.length||0}</p>
         </div>
-        <p className="m-0 text-sm text-gray-600">{userName}</p>
+        <p className="m-0 text-sm text-gray-600">{user.USERNAME}</p>
       </div>
     </div>
   );
 };
-
 
 export const PostCard = ({ name, date, cont }) => {
   return (
