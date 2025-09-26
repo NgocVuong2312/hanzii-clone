@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useLocation } from "react-router-dom";
 import "primeicons/primeicons.css";
 import { Card, Input, Button } from "antd";
 import { CmtCard } from "../components/Card";
