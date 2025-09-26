@@ -10,34 +10,30 @@ import { Layout, Card, Tag, Dropdown, Input } from "antd";
 import { Carousel } from "primereact/carousel";
 import { LeftOutlined, RightOutlined, ReadOutlined } from "@ant-design/icons";
 import { ItemCard, CmtCard } from "../components/Card";
-export default function Homepage() {
+
+export default function AdminPage() {
   const getTipsUrl = "http://localhost:8080/api/tips/get";
   const createTipsUrl = "http://localhost:8080/api/tips/create";
   const getCMT_URL = "http://localhost:8080/api/comments";
   const getUserUrl = "http://localhost:8080/api/users/get/";
   const getVolcabUrl = "http://localhost:8080/api/volcap";
-  const [test, setTest] = useState([]);
-  const updateVolcabularyPopular = "http://localhost:8080/api/volcap/update/";
   const updateUserVolcapHistoryUrl =
     "http://localhost:8080/api/users/updateVolcapId/";
   const [currentVolcap, setCurrentVolcap] = useState([]);
   const [comments, setComments] = useState([]);
-  const [activeSearchResults, setActiveSearchResults] = useState(false);
   const [tips, setTips] = useState([]);
-  const [searchItems, setSearchItems] = useState([]);
   const [tipsContent, setTipsContent] = useState("");
   const [tipsVisible, setTipsVisible] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [date, setDate] = useState("Hôm nay");
   const [userName, setUserName] = useState("");
-  const [currentItem, setCurrentItem] = useState("tu_vung");
+  const [currentItem, setCurrentItem] = useState("Tu Vung");
   const [vocapHistory, setVocapHistory] = useState([]);
   const [vch, setVCH] = useState();
   const [validHis, setValidHis] = useState(false);
   const [User, setUser] = useState();
   const [volcab, setVolcab] = useState([]);
   const [rankedTime, setRankedTime] = useState();
-  const [query, setQuery] = useState();
   const nav = useNavigate();
   const currentDate = new Date();
   const Userid = JSON.parse(localStorage.getItem("user"));
@@ -82,23 +78,12 @@ export default function Homepage() {
         const created = new Date(m.created_date);
         return created >= startOfWeek && created <= endOfWeek;
       });
-      setComments(filteredData);
+      setComments(filteredData)
     }
   };
   useEffect(() => {
     fetchComments();
   }, [date]);
-
-  const updateVolcapPopular = async (id) => {
-    const filterdata = volcab.find((m) => m.category_name === currentItem);
-    const isContain = filterdata.popular?.find((m) => m === UID);
-    if (!isContain) {
-      await axios.patch(updateVolcabularyPopular + id, {
-        popular: JSON.stringify([...(filterdata.popular || []), UID]),
-        category_name: currentItem,
-      });
-    }
-  };
 
   const addVCH = async () => {
     const filteredHistory = vocapHistory.filter((id) => !vch.includes(id));
@@ -118,23 +103,8 @@ export default function Homepage() {
       addVCH();
     }
   }, [vocapHistory]);
-  const handleSearch = (e) => {
-    const findData = volcab.find(
-      (m) => m.name == query && m.category_name == currentItem
-    );
-    if (query.trim() && findData) {
-      nav("/volcabularypage");
-      localStorage.setItem(
-        "myData",
-        JSON.stringify({
-          id: findData.volcabulary_id,
-          category: currentItem,
-        })
-      );
-    } else {
-      return;
-    }
-  };
+
+
 
   // Add tip
   const handleAddTip = async () => {
@@ -206,7 +176,7 @@ export default function Homepage() {
       const response = await axios.get(getUserUrl + UID);
       const getData = response.data.data[0];
       console.log(getData.VHID);
-
+      
       setVCH(getData[0]?.VHID || []);
       if (getData[0]?.VHID) {
         setValidHis(true);
@@ -229,124 +199,61 @@ export default function Homepage() {
       setUserName("");
     }
   }, [User]);
-  const handleSearchData = () => {
-    const filterData = volcab.filter(
-      (m) =>
-        m.name.toLowerCase().includes(query.toLowerCase()) &&
-        m.category_name === currentItem
-    );
-    setSearchItems(filterData);
-  };
 
-  useEffect(() => {
-    handleSearchData();
-  }, [query]);
   // Fetch vocab
   useEffect(() => {
     const fetchVolcap = async () => {
       const response = await axios.get(getVolcabUrl);
 
       const data = response.data.data;
-      //chỗ này cần sửa logic, sau sửa để lọc theo số lượng từ vựng được visit nhiều nhất tùy theo từng mục((categories)) chỗ này sửa sau khi xây xong dataset từ điển tiếng trung cho trang web,
+      //chỗ này cần sửa logic, sau sửa để lọc theo số lượng từ vựng được visit nhiều nhất tùy theo từng mục((categories)) chỗ này sửa sau khi xây xong dataset từ điển tiếng trung cho trang web, 
       const filteredData = data.filter(
         (item) =>
-          item.category_name?.toString().trim().toLowerCase() ===
+          item.type?.toString().trim().toLowerCase() ===
           currentItem.toString().trim().toLowerCase()
       );
       setCurrentVolcap(filteredData || []);
-      setVolcab(data || []);
+      setVolcab(data|| []); 
+      console.log(data);
+      
     };
     fetchVolcap();
   }, [currentItem]);
 
   return (
     <div>
-      <button
-        onClick={() => {
-          console.log(
-            searchItems.flatMap((item) =>
-              item.children.map((child) => child.transerlate)
-            )
-          );
-        }}
-      >
-        {" "}
-        test
-      </button>
+      <button onClick={() => {console.log(volcab);
+      }}> test</button>
       <div className="m-4 flex flex-column align-items-center">
         {isLogin && <h2>Xin chào, {userName}</h2>}
 
         {/* Search + filter */}
         <div className="flex align-items-center flex-column w-full">
-          <div className="relative w-7 m-auto">
-            <form
-              onSubmit={handleSearch}
-              className="d-flex align-items-center border-blue-400 border border-round-3xl px-3 py-2 shadow-sm bg-white h-full"
-            >
-              <i className="pi pi-search"></i>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setActiveSearchResults(!!e.target.value);
-                }}
-                className="form-control border-0 shadow-none bg-transparent"
-                placeholder="Nhập tiếng Trung"
-              />
-              <i className="pi pi-microphone"></i>
-              <i className="pi pi-pencil"></i>
-            </form>
-
-            {activeSearchResults && (
-              <div
-                className="absolute left-0 right-0 bg-white border shadow-md mt-2 rounded-xl p-2"
-                style={{ zIndex: 9999 }}
-              >
-                <div className="flex flex-col">
-                  {searchItems.map((m) => (
-                    <div
-                      key={m.id}
-                      className="truncate max-w-full whitespace-nowrap overflow-hidden"
-                      onClick={() => {
-                        nav("/volcabularypage");
-                        localStorage.setItem(
-                          "myData",
-                          JSON.stringify({
-                            id: m.volcabulary_id,
-                            category: "tu_vung",
-                          })
-                        );
-                      }}
-                    >
-                      {m.name} {m.word_spell}:{" "}
-                      {m.children.map((child, idx) => (
-                        <span key={child.id}>
-                          {child.transerlate}
-                          {idx < m.children.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="d-flex align-items-center border-blue-400 border border-round-3xl px-3 py-2 shadow-sm m-auto w-7 bg-white h-full">
+            <i className="pi pi-search"></i>
+            <input
+              type="text"
+              className="form-control border-0 shadow-none bg-transparent"
+              placeholder="Nhập tiếng Trung"
+            />
+            <i className="pi pi-microphone"></i>
+            <i className="pi pi-pencil"></i>
           </div>
 
-          <div className="flex justify-content-center align-items-center gap-2 mt-3">
+          <div className="flex justify-content-center align-items-center mt-3">
             {itemsList.map((m) => (
-              <button
+              <a
                 key={m.cont}
                 style={
                   currentItem === m.cont
                     ? { backgroundColor: "#47609f", color: "white" }
                     : {}
                 }
-                className="flex align-items-center py-1 px-3 border-0 border-round-3xl cursor-pointer"
+                className="flex align-items-center gap-2 py-2 px-3 border-round-3xl no-underline cursor-pointer"
                 onClick={() => setCurrentItem(m.cont)}
               >
                 {m.label}
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -358,25 +265,19 @@ export default function Homepage() {
           {/* Left column */}
           <div className="column left-col">
             <Card className="border-round-2xl" title="Từ khóa hot" size="small">
-              {currentVolcap.map((m) => (
+              {volcab.map((m) => (
                 <Tag
                   key={m.id}
                   color="blue"
                   style={{ marginBottom: 8, cursor: "pointer" }}
                   onClick={() => {
                     setVocapHistory((prev) => {
-                      if (prev.includes(m.volcabulary_id)) return prev;
-                      return [...prev, m.volcabulary_id];
+                      if (prev.includes(m.id)) return prev;
+                      return [...prev, m.id];
                     });
-                    updateVolcapPopular(m.volcabulary_id);
-                    nav("/volcabularypage");
-                    localStorage.setItem(
-                      "myData",
-                      JSON.stringify({
-                        id: m.volcabulary_id,
-                        category: currentItem,
-                      })
-                    );
+                    nav("/volcabularypage", {
+                      state: { data: { content: m.id } },
+                    });
                   }}
                 >
                   {m.name}
@@ -441,19 +342,15 @@ export default function Homepage() {
 
           {/* Middle column */}
           <div className="column middle-col">
-            <Card
-              className="border-round-2xl"
-              styles={{ body: { padding: 0 } }}
-            >
+          <Card className="border-round-2xl" styles={{body: {padding: 0} }}>
               <Card
                 className="border-round-2xl"
                 styles={{
-                  body: {
-                    padding: 0,
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    border: "2px solid #ccc",
-                  },
+                  body:
+                  {padding: 0,
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "2px solid #ccc",}
                 }}
               >
                 <Carousel
@@ -530,7 +427,9 @@ export default function Homepage() {
               }
               style={{ flex: 1, display: "flex", flexDirection: "column" }}
               styles={{
-                body: { display: "flex", flexDirection: "column", height: 400 },
+                body:{display: "flex",
+                flexDirection: "column",
+                height: 400,}
               }}
             >
               {/* Comments */}
@@ -658,6 +557,27 @@ export default function Homepage() {
                 </div>
               ))}
             </div>
+
+            {/* Ô nhập cho admin */}
+         
+              <div
+                style={{
+                  marginTop: 12,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Input
+                  placeholder="Thêm mẹo mới..."
+                  value={tipsContent}
+                  onChange={(e) => setTipsContent(e.target.value)}
+                  onPressEnter={handleAddTip}
+                />
+                <Button type="primary" onClick={handleAddTip}>
+                  Thêm
+                </Button>
+              </div>
           </Card>
         </div>
       )}

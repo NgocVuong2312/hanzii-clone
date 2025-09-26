@@ -36,21 +36,21 @@ export const caro = [
 export const itemsList = [
   {
     label: "Từ Vựng",
-    cont: "Tu Vung",
+    cont: "tu_vung",
   },
-  { label: "Hán tự", cont: "Han Tu" },
-  { label: "Ví dụ", cont: "Vi Du" },
+  { label: "Hán tự", cont: "han_tu" },
+  { label: "Ví dụ", cont: "vi_du" },
   {
     label: "Ngữ pháp",
-    cont: "Ngu Phap",
+    cont: "ngu_phap",
   },
   {
     label: "Trung Trung",
-    cont: "Trung Trung",
+    cont: "trung_trung",
   },
   {
     label: "Trung Anh",
-    cont: "Trung Anh",
+    cont: "trung_anh",
   },
 ];//cbi bo
 export const volcapList = [

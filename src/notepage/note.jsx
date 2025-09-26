@@ -62,7 +62,7 @@ export default function Note() {
           <Card
             className="border-round-2xl"
             title="Ca nhan"
-            bodyStyle={{ padding: "0" }}
+            styles={{body:{ padding: "0"} }}
           >
             <div className="flex flex-column text-center p-0">
               <Image
@@ -81,7 +81,7 @@ export default function Note() {
           <Card
             title="Mien phi"
             className="border-round-2xl"
-            bodyStyle={{ paddingBottom: "0" }}
+            styles={{ body:{paddingBottom: "0"} }}
           >
             {/* Miễn phí */}
             <div style={{ marginBottom: 20 }}>
@@ -105,10 +105,10 @@ export default function Note() {
                     <Card
                       hoverable
                       style={{ height: "100%" }}
-                      bodyStyle={{
-                        display: "flex",
+                      styles={{
+                        body:{display: "flex",
                         flexDirection: "column",
-                        justifyContent: "space-between",
+                        justifyContent: "space-between",}
                       }}
                     >
                       <div>
